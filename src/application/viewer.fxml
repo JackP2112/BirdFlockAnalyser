@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ToggleButton?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Pane?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="800.0" prefWidth="1100.0" xmlns="http://javafx.com/javafx/10.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="application.ViewerController">
+   <children>
+      <HBox alignment="CENTER">
+         <children>
+            <Pane fx:id="imageLayers">
+               <children>
+                  <ImageView fx:id="imageView" fitHeight="720.0" fitWidth="1100.0" nodeOrientation="INHERIT" pickOnBounds="true" preserveRatio="true" smooth="false" />
+               </children>
+            </Pane>
+         </children>
+      </HBox>
+      <Pane>
+         <children>
+            <HBox fx:id="controlPanel" alignment="CENTER" prefHeight="80.0" prefWidth="1100.0" spacing="30.0">
+               <children>
+                  <Button mnemonicParsing="false" onAction="#chooseFile" prefHeight="55.0" prefWidth="55.0">
+                     <graphic>
+                        <ImageView fitHeight="39.0" fitWidth="39.0" pickOnBounds="true" preserveRatio="true">
+                           <image>
+                              <Image url="@../images/folder.png" />
+                           </image>
+                        </ImageView>
+                     </graphic>
+                  </Button>
+                  <ToggleButton fx:id="scanImageButton" layoutX="575.0" layoutY="23.0" mnemonicParsing="false" onAction="#scanImage" prefHeight="55.0" prefWidth="55.0">
+                     <graphic>
+                        <ImageView fitHeight="39.0" fitWidth="39.0" pickOnBounds="true" preserveRatio="true">
+                           <image>
+                              <Image url="@../images/findbirds.png" />
+                           </image>
+                        </ImageView>
+                     </graphic>
+                  </ToggleButton>
+                  <ToggleButton fx:id="posteriseButton" layoutX="533.0" layoutY="23.0" mnemonicParsing="false" onAction="#posterise" prefHeight="55.0" prefWidth="55.0">
+                     <graphic>
+                        <ImageView fitHeight="39.0" fitWidth="39.0" pickOnBounds="true" preserveRatio="true">
+                           <image>
+                              <Image url="@../images/bw.png" />
+                           </image>
+                        </ImageView>
+                     </graphic>
+                  </ToggleButton>
+                  <Button layoutX="618.0" layoutY="23.0" mnemonicParsing="false" onAction="#changePanel" prefHeight="55.0" prefWidth="55.0">
+                     <graphic>
+                        <ImageView fitHeight="39.0" fitWidth="39.0" pickOnBounds="true" preserveRatio="true">
+                           <image>
+                              <Image url="@../images/settings.png" />
+                           </image>
+                        </ImageView>
+                     </graphic>
+                  </Button>
+                  <Button layoutX="660.0" layoutY="23.0" mnemonicParsing="false" onAction="#exit" prefHeight="55.0" prefWidth="55.0">
+                     <graphic>
+                        <ImageView fitHeight="39.0" fitWidth="39.0" pickOnBounds="true" preserveRatio="true">
+                           <image>
+                              <Image url="@../images/close.png" />
+                           </image>
+                        </ImageView>
+                     </graphic>
+                  </Button>
+               </children>
+            </HBox>
+            <HBox fx:id="settingsPanel" alignment="CENTER" prefHeight="80.0" prefWidth="1100.0" visible="false">
+               <children>
+                  <Button mnemonicParsing="false" onAction="#changePanel" prefHeight="55.0" prefWidth="55.0">
+                     <graphic>
+                        <ImageView fitHeight="39.0" fitWidth="39.0" pickOnBounds="true" preserveRatio="true">
+                           <image>
+                              <Image url="@../images/back.png" />
+                           </image>
+                        </ImageView>
+                     </graphic>
+                  </Button>
+               </children></HBox>
+         </children>
+      </Pane>
+   </children>
+</VBox>
