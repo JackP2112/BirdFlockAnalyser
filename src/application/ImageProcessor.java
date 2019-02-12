@@ -81,6 +81,7 @@ public class ImageProcessor {
 				pos++;
 			}
 			clusterCount = count;
+			System.out.println(count);
 			int[] setsShortlist = new int[count];
 			int i = 0;
 			while (recordedSets[i] != -1) setsShortlist[i] = recordedSets[i++];
@@ -152,6 +153,10 @@ public class ImageProcessor {
 			pos++;
 		}
 		return edges;
+	}
+
+	public int getClusterCount(){
+		return clusterCount;
 	}
 
 	private static class DisjointSets{

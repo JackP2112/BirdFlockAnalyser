@@ -3,6 +3,9 @@ package application;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.Node;
+import javafx.scene.control.Label;
+import javafx.scene.control.RadioButton;
+import javafx.scene.control.Slider;
 import javafx.scene.control.Toggle;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -18,9 +21,12 @@ import java.io.IOException;
 public class ViewerController {
 
     @FXML private ImageView imageView;
-    @FXML public Pane imageLayers; //TODO: DO NOT LEAVE PUBLIC
+    @FXML private  Pane imageLayers;
+    @FXML private Label countLabel;
     @FXML private Toggle scanImageButton, posteriseButton;
     @FXML private HBox controlPanel, settingsPanel;
+    @FXML private Slider posteriseSlider, filterMinSlider, filterMaxSlider;
+    @FXML private RadioButton filterMinMax, filterIQRange;
     private Image image;
     private ImageProcessor imgProc;
 
@@ -56,6 +62,7 @@ public class ViewerController {
             for (Rectangle rect : rects) {
                 imageLayers.getChildren().add(rect);
             }
+            countLabel.setText(String.valueOf(imgProc.getClusterCount())+" Birds");
         } else{
             ObservableList<Node> children = imageLayers.getChildren();
             while(children.size()>1) children.remove(1);
@@ -64,7 +71,7 @@ public class ViewerController {
 
     @FXML
     private void posterise(){
-        if(posteriseButton.isSelected()) imageView.setImage(imgProc.posterise(100));
+        if(posteriseButton.isSelected()) imageView.setImage(imgProc.posterise((int)posteriseSlider.getValue()));
         else imageView.setImage(image);
     }
 

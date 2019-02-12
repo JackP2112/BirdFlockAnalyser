@@ -1,12 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.RadioButton?>
+<?import javafx.scene.control.Slider?>
 <?import javafx.scene.control.ToggleButton?>
+<?import javafx.scene.control.ToggleGroup?>
 <?import javafx.scene.image.Image?>
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.Pane?>
 <?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
 
 <VBox alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="800.0" prefWidth="1100.0" xmlns="http://javafx.com/javafx/10.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="application.ViewerController">
    <children>
@@ -21,7 +27,12 @@
       </HBox>
       <Pane>
          <children>
-            <HBox fx:id="controlPanel" alignment="CENTER" prefHeight="80.0" prefWidth="1100.0" spacing="30.0">
+            <Label fx:id="countLabel" alignment="CENTER" prefHeight="80.0" prefWidth="119.0">
+               <font>
+                  <Font size="20.0" />
+               </font>
+            </Label>
+            <HBox fx:id="controlPanel" alignment="CENTER" prefHeight="80.0" prefWidth="1100.0" spacing="30.0" visible="false">
                <children>
                   <Button mnemonicParsing="false" onAction="#chooseFile" prefHeight="55.0" prefWidth="55.0">
                      <graphic>
@@ -70,8 +81,42 @@
                   </Button>
                </children>
             </HBox>
-            <HBox fx:id="settingsPanel" alignment="CENTER" prefHeight="80.0" prefWidth="1100.0" visible="false">
+            <HBox fx:id="settingsPanel" alignment="CENTER" prefHeight="80.0" prefWidth="1100.0" spacing="20.0">
                <children>
+                  <VBox alignment="CENTER" spacing="10.0">
+                     <children>
+                        <Label text="Posterisation Cut-off" />
+                        <Slider fx:id="posteriseSlider" max="255.0" onMouseReleased="#posterise" value="100.0" />
+                     </children>
+                  </VBox>
+                  <VBox alignment="CENTER" layoutX="453.0" layoutY="10.0">
+                     <children>
+                        <RadioButton fx:id="filterMinMax" mnemonicParsing="false" text="Filter Min/Max Size">
+                           <VBox.margin>
+                              <Insets bottom="-10.0" />
+                           </VBox.margin>
+                           <toggleGroup>
+                              <ToggleGroup fx:id="filterGroup" />
+                           </toggleGroup></RadioButton>
+                        <Label />
+                        <Slider fx:id="filterMinSlider">
+                           <VBox.margin>
+                              <Insets bottom="5.0" />
+                           </VBox.margin>
+                        </Slider>
+                        <Slider fx:id="filterMaxSlider" layoutX="10.0" layoutY="60.0" value="100.0" />
+                     </children>
+                  </VBox>
+                  <VBox alignment="CENTER" layoutX="533.0" layoutY="10.0">
+                     <children>
+                        <RadioButton fx:id="filterIQRange" mnemonicParsing="false" text="Filter Interquartile Range" toggleGroup="$filterGroup">
+                           <VBox.margin>
+                              <Insets bottom="-15.0" />
+                           </VBox.margin>
+                        </RadioButton>
+                        <Label />
+                     </children>
+                  </VBox>
                   <Button mnemonicParsing="false" onAction="#changePanel" prefHeight="55.0" prefWidth="55.0">
                      <graphic>
                         <ImageView fitHeight="39.0" fitWidth="39.0" pickOnBounds="true" preserveRatio="true">
