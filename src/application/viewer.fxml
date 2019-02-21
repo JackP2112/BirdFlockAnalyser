@@ -86,7 +86,7 @@
                   <VBox alignment="CENTER" spacing="10.0">
                      <children>
                         <Label text="Posterisation Cut-off" />
-                        <Slider fx:id="posteriseSlider" max="255.0" onMouseReleased="#posterise" value="100.0" />
+                        <Slider fx:id="posteriseSlider" max="255.0" onKeyPressed="#posterise" onMouseReleased="#posterise" value="100.0" />
                      </children>
                   </VBox>
                   <VBox alignment="CENTER" layoutX="453.0" layoutY="10.0">
@@ -99,12 +99,12 @@
                               <ToggleGroup fx:id="filterGroup" />
                            </toggleGroup></RadioButton>
                         <Label />
-                        <Slider fx:id="filterMinSlider">
+                        <Slider fx:id="filterMinSlider" onKeyPressed="#filterSize" onMouseReleased="#filterSize">
                            <VBox.margin>
                               <Insets bottom="5.0" />
                            </VBox.margin>
                         </Slider>
-                        <Slider fx:id="filterMaxSlider" layoutX="10.0" layoutY="60.0" value="100.0" />
+                        <Slider fx:id="filterMaxSlider" layoutX="10.0" layoutY="60.0" onKeyPressed="#filterSize" onMouseReleased="#filterSize" value="100.0" />
                      </children>
                   </VBox>
                   <VBox alignment="CENTER" layoutX="533.0" layoutY="10.0">

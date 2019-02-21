@@ -16,16 +16,20 @@ public class ImageProcessor {
 	private int height;
 	private int[] sets;
 	private int[] clusters;
-	private int clusterCount;
+	private int posteriseCutoff = 100;
+	private int sizeFilterMin;
+	private int sizeFilterMax;
 
 
 	public ImageProcessor(Image image){
 		this.image = image;
 		width = (int) image.getWidth();
 		height = (int) image.getHeight();
+		sizeFilterMax=height*width;
 	}
 
 	public Image posterise(int cutoff){
+		this.posteriseCutoff = cutoff;
 		WritableImage wImage = new WritableImage(width, height);
 		PixelReader pixelReader = image.getPixelReader();
 		PixelWriter pixelWriter = wImage.getPixelWriter();
@@ -43,10 +47,10 @@ public class ImageProcessor {
 	}
 
 	public int[] findClusters(){
-		if(clusters==null) { //only process image on first run, result is saved to clusters[] for later requests
+//		if(clusters==null) { //only process image on first run, result is saved to clusters[] for later requests
 			sets = new int[width * height];
 			for (int i=0;i<sets.length;i++) sets[i] = i; //default set to 0,1,2,3...
-			PixelReader pixelReader = posterise(100).getPixelReader();
+			PixelReader pixelReader = posterise(posteriseCutoff).getPixelReader();
 			for (int y=0;y<height;y++) {
 				for (int x=0;x<width;x++) {
 					int index = y*width + x;
@@ -54,7 +58,11 @@ public class ImageProcessor {
 					if (argb == 0xff000000) { //if black pixel found
 						if (x < width-1 && pixelReader.getArgb(x + 1, y) == 0xff000000) { //if pixel to the right is black, check x<width-1 to stop at image boundary
 							if (sets[index + 1] != index + 1) { //if pixel is in existing set
-								DisjointSets.union(sets, index, index + 1); //unite current pixel into existing set
+								int currentRoot = DisjointSets.find(sets, index);
+								int existingRoot = DisjointSets.find(sets, index+1);
+								DisjointSets.union(sets, (existingRoot<currentRoot) ? currentRoot : existingRoot,
+										(existingRoot<currentRoot) ? existingRoot : currentRoot);
+								//unions sets based on the root always being the first element of the set
 							} else {
 								sets[index + 1] = sets[index]; //unite right pixel into current set
 							}
@@ -80,44 +88,53 @@ public class ImageProcessor {
 				}
 				pos++;
 			}
-			clusterCount = count;
-			System.out.println(count);
 			int[] setsShortlist = new int[count];
 			int i = 0;
 			while (recordedSets[i] != -1) setsShortlist[i] = recordedSets[i++];
 			clusters = setsShortlist;
-		}
+//		}
 		return clusters;
 	}
 
+	public void filterClusterSize(int min, int max){
+		if(min>0 || max<width*height) {
+			int rootsToBeRemoved = 0;
+			int pos=0;
+			for (int root : clusters) {
+				int[] subset = getClusterSubset(root);
+				int size = DisjointSets.size(subset, root);
+				if (size < min || size > max) {
+					clusters[pos] = -root; //mark root for removal
+					rootsToBeRemoved++;
+				}
+				pos++;
+			}
+			int[] newClusters = new int[clusters.length - rootsToBeRemoved];
+			pos = 0;
+			for (int root : clusters) {
+				if (root > -1) newClusters[pos++] = root;
+			}
+			clusters = newClusters;
+		}
+	}
 
-
-//	public void filterClusterSize(Image image, int cutoff){
-//		WritableImage wImage = (WritableImage) image;
-//		PixelWriter pixelWriter = wImage.getPixelWriter();
-//		for(int i:sets){
-//			if(i!=-1) {
-//				int size = DisjointSets.size(sets, i);
-//				if (size <= cutoff) {
-//					int pos = i;
-//					for (int j:sets) {
-//						if(j!=-1) {
-//							if (DisjointSets.find(sets, j) == DisjointSets.find(sets, i)) { //subsets
-//								pixelWriter.setArgb(pos % width, pos / width, 0xffffffff);
-//							}
-//						}
-//						pos++;
-//					}
-//				}
-//			}
-//		}
-//	}
+	private int[] getClusterSubset(int root){ //gets a subset of sets[] which only contains the pixels within a clusters edges
+		int[] edges = determineClusterEdges(root);
+		int[] subset = new int[(edges[1]-edges[3]+1)*(edges[2]-edges[0]+1)];
+		for(int y=edges[0];y<=edges[2];y++){
+			for(int x=edges[3];x<=edges[1];x++){
+				subset[(y-edges[0])*(edges[1]-edges[3]+1)+x-edges[3]]=sets[y*width+x];
+			}
+		}
+		return subset;
+	}
 
 	public Rectangle[] getClusterBoxes(){
-		int[] roots = findClusters();
-		Rectangle[] boxes = new Rectangle[clusterCount];
+		findClusters();
+		filterClusterSize(sizeFilterMin, sizeFilterMax);
+		Rectangle[] boxes = new Rectangle[clusters.length];
 		int i=0;
-		for(int root:roots){
+		for(int root:clusters){
 			boxes[i++] = boxCluster(determineClusterEdges(root));
 		}
 		return boxes;
@@ -130,50 +147,60 @@ public class ImageProcessor {
 		return rectangle;
 	}
 
-	public void filterClusterSize(Image image, int cutoff){
-//		int[] roots = new int[sets.length/2];
-	}
-
 	private int[] determineClusterEdges(int root){
 		int[] edges = new int[4]; //top, right, bottom, left
-		edges[0] = -1; //default top to -1 in order to take first pixel discovered as top edge
 		edges[3] = width;
-		int pos=0;
-		for(int i:sets){
-			if(i==root){ //if black pixel is in set
-				if(edges[0]==-1) edges[0] = pos/width; //first pixel discovered is top edge
+		int pos=root;
+		edges[0] = root/width; //first pixel is top edge
+		for(int i=root;i<sets.length;i++){
+			if(sets[i]==root){ //if black pixel is in set
 				if(pos%width>edges[1]) edges[1] = pos%width; //right edge
 				if(pos/width>edges[2]) edges[2] = pos/width; //bottom edge
 				if(pos%width<edges[3]) edges[3] = pos%width; //left edge
 			}
-			//if(edges[0]!=-1 && pos++%width>edges[1] && pos/width>edges[2]) return edges; //if current pos has white margin around cluster, entire cluster has been processed
-			if(edges[0]!=-1 && (pos%width)>edges[1] && (pos/width)>edges[2]){
-				return edges;
-			}
+			if((pos%width)>edges[1] && (pos/width)>edges[2]) return edges; //if current pos has white margin around cluster, entire cluster has been processed
 			pos++;
 		}
 		return edges;
 	}
 
 	public int getClusterCount(){
-		return clusterCount;
+		return clusters.length;
+	}
+
+	public int[] getMinMaxClusterSize(){
+		int[] minMax = new int[2];
+		minMax[0]=height*width;
+		for(int root:clusters){
+			int size = DisjointSets.size(getClusterSubset(root), root);
+			if(size<minMax[0]) minMax[0]=size;
+			if(size>minMax[1]) minMax[1]=size;
+		}
+		return minMax;
+	}
+
+	public void setSizeFilterMin(int min){
+		sizeFilterMin=min;
+	}
+
+	public void setSizeFilterMax(int max){
+		sizeFilterMax=max;
 	}
 
 	private static class DisjointSets{
 
 		private static int find(int[] sets, int id) {
-			return sets[id]==id? id: find(sets,sets[id]); //find the root of any element
+			return sets[id]==id?id: find(sets,sets[id]); //find the root of any element
 		}
 
 		private static void union(int[] sets, int childSet, int parentSet){
 			sets[find(sets,childSet)]=find(sets,parentSet);
 		}
 
-		private static int size(int[] sets, int element){ //gets the size of a disjoint set
+		private static int size(int[] sets, int root){ //gets the size of a disjoint set
 			int size = 0;
-			int root = find(sets, element); //root of every subset
 			for(int i:sets){
-				if(i!=-1 && find(sets,i)==root) size++; //if root of set is root i.e. is a subset
+				if(i==root) size++; //if root of set is root i.e. is a subset
 			}
 			return size;
 		}
