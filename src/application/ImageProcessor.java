@@ -126,8 +126,49 @@ public class ImageProcessor {
 		}
 	}
 
+	public void findFormation(){
+		System.out.println("running dear");
+		int minLineSize = (int) (0.7*clusters.length);
+		int[][] candidates = new int[10][2];
+		int numCandidates=0;
+		int[][] centerpoints = new int[clusters.length][2]; //centerpoints of clusters [0] = x, [1] = y
+		for(int i=0;i<clusters.length;i++){
+			int[] edges = getClusterEdges(clusters[i]);
+			centerpoints[i][0] = edges[1]-edges[3]; //x coord
+			centerpoints[i][1] = edges[2]-edges[0]; //y coord
+		}
+		for(int i=0;i<clusters.length-1;i++){
+			for(int j=i+1;j<clusters.length;j++){ //two clusters not immediately adjacent
+				//find line
+				int x1 = centerpoints[i][0];
+				int y1 = centerpoints[i][1];
+				int x2 = centerpoints[j][0];
+				int y2 = centerpoints[j][1];
+				int m = (y2-y1)/(x2-x1);
+				int c = y1 - (m*x1);
+				//find clusters on line
+				int[] recordedRoots = new int[clusters.length-2];
+				int count=0;
+				for(int x=x1;x<x2;x++){ //move along line
+					int y = m*x+c;
+					int pixel = sets[y*width+x];
+					if(pixel!=-1){ //if pixel is black
+						if (Arrays.stream(recordedRoots).noneMatch(a -> a == pixel)) { //if root not already recorded
+							recordedRoots[count++] = pixel;
+						}
+					}
+				}
+				count+=2; //add endpoints to size of line
+				if(count>=minLineSize){
+					candidates[numCandidates++][0] = i;
+					candidates[numCandidates++][1] = j;
+				}
+			}
+		}
+	}
+
 	private int[] getClusterSubset(int root){ //gets a subset of sets[] which only contains the pixels within a clusters edges
-		int[] edges = determineClusterEdges(root);
+		int[] edges = getClusterEdges(root);
 		int[] subset = new int[(edges[1]-edges[3]+1)*(edges[2]-edges[0]+1)];
 		for(int y=edges[0];y<=edges[2];y++){
 			for(int x=edges[3];x<=edges[1];x++){
@@ -143,7 +184,7 @@ public class ImageProcessor {
 		Rectangle[] boxes = new Rectangle[clusters.length];
 		int i=0;
 		for(int root:clusters){
-			boxes[i++] = boxCluster(determineClusterEdges(root));
+			boxes[i++] = boxCluster(getClusterEdges(root));
 		}
 		return boxes;
 	}
@@ -155,7 +196,7 @@ public class ImageProcessor {
 		return rectangle;
 	}
 
-	private int[] determineClusterEdges(int root){
+	private int[] getClusterEdges(int root){
 		int[] edges = new int[4]; //top, right, bottom, left
 		edges[3] = width;
 		int pos=root;

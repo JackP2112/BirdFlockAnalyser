@@ -13,6 +13,7 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.shape.Rectangle;
+import javafx.scene.text.Text;
 import javafx.stage.FileChooser;
 
 import java.io.File;
@@ -66,8 +67,10 @@ public class ViewerController {
 		while(children.size()>1) children.remove(1);
 		if(scanImageButton.isSelected()) {
 			Rectangle[] rects = imgProc.getClusterBoxes();
+			int clusterNo = 1;
 			for (Rectangle rect : rects) {
 				imageLayers.getChildren().add(rect);
+				imageLayers.getChildren().add(new Text(rect.getX()+rect.getWidth(), rect.getY(), Integer.toString(clusterNo++)));
 			}
 			countLabel.setText(imgProc.getClusterCount()+" Birds");
 		}
@@ -99,6 +102,11 @@ public class ViewerController {
 			scanImage();
 		}
 		else imageView.setImage(image);
+	}
+
+	@FXML
+	private void findFormation(){
+		imgProc.findFormation();
 	}
 
 	@FXML

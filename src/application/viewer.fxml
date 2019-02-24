@@ -32,7 +32,7 @@
                   <Font size="20.0" />
                </font>
             </Label>
-            <HBox fx:id="controlPanel" alignment="CENTER" prefHeight="80.0" prefWidth="1100.0" spacing="30.0" visible="false">
+            <HBox fx:id="controlPanel" alignment="CENTER" prefHeight="80.0" prefWidth="1100.0" spacing="30.0">
                <children>
                   <Button mnemonicParsing="false" onAction="#chooseFile" prefHeight="55.0" prefWidth="55.0">
                      <graphic>
@@ -81,7 +81,7 @@
                   </Button>
                </children>
             </HBox>
-            <HBox fx:id="settingsPanel" alignment="CENTER" prefHeight="80.0" prefWidth="1100.0" spacing="20.0">
+            <HBox fx:id="settingsPanel" alignment="CENTER" prefHeight="80.0" prefWidth="1100.0" spacing="20.0" visible="false">
                <children>
                   <VBox alignment="CENTER" spacing="10.0">
                      <children>
@@ -118,6 +118,15 @@
                         <Slider fx:id="filterAvgSlider" blockIncrement="1.0" onKeyPressed="#filterSize" onMouseReleased="#filterSize" />
                      </children>
                   </VBox>
+                  <Button layoutX="773.0" layoutY="23.0" mnemonicParsing="false" onAction="#findFormation" prefHeight="55.0" prefWidth="55.0">
+                     <graphic>
+                        <ImageView fitHeight="39.0" fitWidth="39.0" pickOnBounds="true" preserveRatio="true">
+                           <image>
+                              <Image url="@../images/delta.png" />
+                           </image>
+                        </ImageView>
+                     </graphic>
+                  </Button>
                   <Button mnemonicParsing="false" onAction="#changePanel" prefHeight="55.0" prefWidth="55.0">
                      <graphic>
                         <ImageView fitHeight="39.0" fitWidth="39.0" pickOnBounds="true" preserveRatio="true">
