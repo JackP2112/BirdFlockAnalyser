@@ -17,8 +17,8 @@ public class ImageProcessor {
 	private int[] sets;
 	private int[] clusters;
 	private int posteriseCutoff = 100;
-	private int sizeFilterMin;
-	private int sizeFilterMax;
+	private int sizeFilterMin, sizeFilterMax;
+	private int clusterMinSize, clusterMaxSize;
 
 
 	public ImageProcessor(Image image){
@@ -46,63 +46,59 @@ public class ImageProcessor {
 		return wImage;
 	}
 
-	public int[] findClusters(){
-//		if(clusters==null) { //only process image on first run, result is saved to clusters[] for later requests
-			sets = new int[width * height];
-			for (int i=0;i<sets.length;i++) sets[i] = i; //default set to 0,1,2,3...
-			PixelReader pixelReader = posterise(posteriseCutoff).getPixelReader();
-			for (int y=0;y<height;y++) {
-				for (int x=0;x<width;x++) {
-					int index = y*width + x;
-					int argb = pixelReader.getArgb(x, y);
-					if (argb == 0xff000000) { //if black pixel found
-						if (x < width-1 && pixelReader.getArgb(x + 1, y) == 0xff000000) { //if pixel to the right is black, check x<width-1 to stop at image boundary
-							if (sets[index + 1] != index + 1) { //if pixel is in existing set
-								int currentRoot = DisjointSets.find(sets, index);
-								int existingRoot = DisjointSets.find(sets, index+1);
-								DisjointSets.union(sets, (existingRoot<currentRoot) ? currentRoot : existingRoot,
-										(existingRoot<currentRoot) ? existingRoot : currentRoot);
-								//unions sets based on the root always being the first element of the set
-							} else {
-								sets[index + 1] = sets[index]; //unite right pixel into current set
-							}
+	public void findClusters(){
+		sets = new int[width * height];
+		for (int i=0;i<sets.length;i++) sets[i] = i; //default set to 0,1,2,3...
+		PixelReader pixelReader = posterise(posteriseCutoff).getPixelReader();
+		for (int y=0;y<height;y++) {
+			for (int x=0;x<width;x++) {
+				int index = y*width + x;
+				int argb = pixelReader.getArgb(x, y);
+				if (argb == 0xff000000) { //if black pixel found
+					if (x < width-1 && pixelReader.getArgb(x + 1, y) == 0xff000000) { //if pixel to the right is black, check x<width-1 to stop at image boundary
+						if (sets[index + 1] != index + 1) { //if pixel is in existing set
+							int currentRoot = DisjointSets.find(sets, index);
+							int existingRoot = DisjointSets.find(sets, index+1);
+							DisjointSets.union(sets, (existingRoot<currentRoot) ? currentRoot : existingRoot,
+									(existingRoot<currentRoot) ? existingRoot : currentRoot);
+							//unions sets based on the root always being the first element of the set
+						} else {
+							sets[index + 1] = sets[index]; //unite right pixel into current set
 						}
-						if (y < height - 1 && pixelReader.getArgb(x, y + 1) == 0xff000000)
-							sets[index + width] = sets[index]; //if pixel below is black, unite into current set
-					} else {
-						sets[y * width + x] = -1; //mark white pixel to be ignored
 					}
+					if (y < height - 1 && pixelReader.getArgb(x, y + 1) == 0xff000000)
+						sets[index + width] = sets[index]; //if pixel below is black, unite into current set
+				} else {
+					sets[y * width + x] = -1; //mark white pixel to be ignored
 				}
 			}
-			int count = 0;
-			int[] recordedSets = new int[sets.length / 2]; //length is maximum num of unique values possible
-			Arrays.fill(recordedSets, -1); //default to invalid array index
-			int pos = 0;
-			for(int i : sets) {
-				if (i != -1) {
-					int root = DisjointSets.find(sets, i);
-					if (Arrays.stream(recordedSets).noneMatch(x -> x == root)) { //if set not already recorded
-						recordedSets[count++] = root;
-					}
-					sets[pos] = root; //update element in set to be root for simplicity
+		}
+		int count = 0;
+		int[] recordedSets = new int[sets.length / 2]; //length is maximum num of unique values possible
+		Arrays.fill(recordedSets, -1); //default to invalid array index
+		int pos = 0;
+		for(int i : sets) {
+			if (i != -1) {
+				int root = DisjointSets.find(sets, i);
+				if (Arrays.stream(recordedSets).noneMatch(x -> x == root)) { //if set not already recorded
+					recordedSets[count++] = root;
 				}
-				pos++;
+				sets[pos] = root; //update element in set to be root for simplicity
 			}
-			int[] setsShortlist = new int[count];
-			int i = 0;
-			while (recordedSets[i] != -1) setsShortlist[i] = recordedSets[i++];
-			clusters = setsShortlist;
-//		}
-		return clusters;
+			pos++;
+		}
+		int[] setsShortlist = new int[count];
+		int i = 0;
+		while (recordedSets[i] != -1) setsShortlist[i] = recordedSets[i++];
+		clusters = setsShortlist;
 	}
 
 	public void filterClusterSize(int min, int max){
-		if(min>0 || max<width*height) {
+		if(min!=-1 && (min>clusterMinSize || max<clusterMaxSize)) { //filter by min/max
 			int rootsToBeRemoved = 0;
 			int pos=0;
 			for (int root : clusters) {
-				int[] subset = getClusterSubset(root);
-				int size = DisjointSets.size(subset, root);
+				int size = getClusterSize(root);
 				if (size < min || size > max) {
 					clusters[pos] = -root; //mark root for removal
 					rootsToBeRemoved++;
@@ -114,6 +110,18 @@ public class ImageProcessor {
 			for (int root : clusters) {
 				if (root > -1) newClusters[pos++] = root;
 			}
+			clusters = newClusters;
+		}
+		if(min==-1 && max>0){ //filter by average size
+			int[] sizes = new int[clusters.length];
+			for(int i=0;i<clusters.length;i++){
+				sizes[i] = getClusterSize(clusters[i]);
+			}
+			int[][] rootsWithSizes = {clusters, sizes};
+			quickSortBySize(rootsWithSizes, 0, clusters.length-1);
+			int[] newClusters = new int[clusters.length-(2*max)];
+			int pos = 0;
+			for(int i=max;i<clusters.length-max;i++) newClusters[pos++] = clusters[i]; //clusters represents deviance from average
 			clusters = newClusters;
 		}
 	}
@@ -164,6 +172,8 @@ public class ImageProcessor {
 		return edges;
 	}
 
+	private int getClusterSize(int root){ return DisjointSets.size(getClusterSubset(root), root);}
+
 	public int getClusterCount(){
 		return clusters.length;
 	}
@@ -172,10 +182,12 @@ public class ImageProcessor {
 		int[] minMax = new int[2];
 		minMax[0]=height*width;
 		for(int root:clusters){
-			int size = DisjointSets.size(getClusterSubset(root), root);
+			int size = getClusterSize(root);
 			if(size<minMax[0]) minMax[0]=size;
 			if(size>minMax[1]) minMax[1]=size;
 		}
+		clusterMinSize = minMax[0];
+		clusterMaxSize = minMax[1];
 		return minMax;
 	}
 
@@ -185,6 +197,28 @@ public class ImageProcessor {
 
 	public void setSizeFilterMax(int max){
 		sizeFilterMax=max;
+	}
+
+	private void quickSortBySize(int[][] a, int lowerIndex, int higherIndex){
+		//2d array [0][i] contains cluster root [1][i] contains cluster size
+		int leftIndex = lowerIndex;
+		int rightIndex = higherIndex;
+		int pivot = a[1][lowerIndex+(higherIndex-lowerIndex)/2];
+		while(leftIndex<=rightIndex){
+			while(a[1][leftIndex]<pivot) leftIndex++;
+			while(a[1][rightIndex]>pivot) rightIndex--;
+			if(leftIndex<=rightIndex){
+				int[] swap = new int[] {a[0][leftIndex], a[1][leftIndex]};
+				a[0][leftIndex] = a[0][rightIndex];
+				a[1][leftIndex] = a[1][rightIndex];
+				a[0][rightIndex] = swap[0];
+				a[1][rightIndex] = swap[1];
+				leftIndex++;
+				rightIndex--;
+			}
+		}
+		if(lowerIndex<rightIndex) quickSortBySize(a, lowerIndex, rightIndex);
+		if(leftIndex<higherIndex) quickSortBySize(a, leftIndex, higherIndex);
 	}
 
 	private static class DisjointSets{

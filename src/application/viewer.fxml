@@ -91,7 +91,7 @@
                   </VBox>
                   <VBox alignment="CENTER" layoutX="453.0" layoutY="10.0">
                      <children>
-                        <RadioButton fx:id="filterMinMax" mnemonicParsing="false" text="Filter Min/Max Size">
+                        <RadioButton fx:id="filterMinMax" mnemonicParsing="false" onMouseClicked="#filterSize" text="Filter Min/Max Size">
                            <VBox.margin>
                               <Insets bottom="-10.0" />
                            </VBox.margin>
@@ -109,12 +109,13 @@
                   </VBox>
                   <VBox alignment="CENTER" layoutX="533.0" layoutY="10.0">
                      <children>
-                        <RadioButton fx:id="filterIQRange" mnemonicParsing="false" text="Filter Interquartile Range" toggleGroup="$filterGroup">
+                        <RadioButton fx:id="filterAvgSize" mnemonicParsing="false" onMouseClicked="#filterSize" text="Filter Average Size" toggleGroup="$filterGroup">
                            <VBox.margin>
-                              <Insets bottom="-15.0" />
+                              <Insets bottom="-10.0" />
                            </VBox.margin>
                         </RadioButton>
                         <Label />
+                        <Slider fx:id="filterAvgSlider" blockIncrement="1.0" onKeyPressed="#filterSize" onMouseReleased="#filterSize" />
                      </children>
                   </VBox>
                   <Button mnemonicParsing="false" onAction="#changePanel" prefHeight="55.0" prefWidth="55.0">

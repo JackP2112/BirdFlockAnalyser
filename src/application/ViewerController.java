@@ -26,11 +26,11 @@ public class ViewerController {
 	@FXML private Label countLabel;
 	@FXML private Toggle scanImageButton, posteriseButton;
 	@FXML private HBox controlPanel, settingsPanel;
-	@FXML private Slider posteriseSlider, filterMinSlider, filterMaxSlider;
-	@FXML private RadioButton filterMinMax, filterIQRange;
+	@FXML private Slider posteriseSlider, filterMinSlider, filterMaxSlider, filterAvgSlider;
+	@FXML private RadioButton filterMinMax, filterAvgSize;
 	private Image image;
 	private ImageProcessor imgProc;
-	private boolean filtersUpdated=false;
+	private boolean filtersUpdated;
 
 
 	@FXML
@@ -44,6 +44,8 @@ public class ViewerController {
 
 	private void loadImage(String path){
 		scanImageButton.setSelected(false);
+		countLabel.setText("");
+		posteriseButton.setSelected(false);
 		scanImage(); //clears previous boxes from screen
 		try {
 			FileInputStream fis = new FileInputStream(path);
@@ -68,27 +70,34 @@ public class ViewerController {
 				imageLayers.getChildren().add(rect);
 			}
 			countLabel.setText(imgProc.getClusterCount()+" Birds");
-			if(!filtersUpdated) filterSetup();
 		}
 	}
 
 	@FXML
 	private void filterSize(){
-		if(filterMinMax.isSelected()){ //filter by min max
-			imgProc.setSizeFilterMin((int)filterMinSlider.getValue());
-			imgProc.setSizeFilterMax((int)filterMaxSlider.getValue());
+		if(!filtersUpdated) updateFilters();
+		if(filterMinMax.isSelected()) {
+			imgProc.setSizeFilterMin((int) filterMinSlider.getValue());
+			imgProc.setSizeFilterMax((int) filterMaxSlider.getValue());
 			scanImage();
 		}
-		else if(filterIQRange.isSelected()){ //filter by interquartile range
-//			scanImage();
-////			imgProc.filterClusterSize(-1,-1); //illegal values signify IQ range
+		else if(filterAvgSize.isSelected()){
+			imgProc.setSizeFilterMin(-1); //illegal value represents filter by average size
+			imgProc.setSizeFilterMax((int) filterAvgSlider.getValue()); //value represents deviance from average
+			scanImage();
 		}
 	}
 
 	@FXML
 	private void posterise(Event e){
 		if(e.getSource()==posteriseSlider) posteriseButton.setSelected(true);
-		if(posteriseButton.isSelected()) imageView.setImage(imgProc.posterise((int)posteriseSlider.getValue()));
+		if(posteriseButton.isSelected()) {
+			imageView.setImage(imgProc.posterise((int)posteriseSlider.getValue()));
+			imgProc.findClusters(); //throwaway to update filters
+			updateFilters();
+			if(filterMinMax.isSelected() || filterAvgSize.isSelected()) filterSize();
+			scanImage();
+		}
 		else imageView.setImage(image);
 	}
 
@@ -99,13 +108,20 @@ public class ViewerController {
 		settingsPanel.setVisible(visible);
 	}
 
-	private void filterSetup(){
+	private void updateFilters(){
+		//setup min/max
 		int[] minMax = imgProc.getMinMaxClusterSize();
 		filterMinSlider.setMin(minMax[0]);
-		filterMinSlider.setMax(minMax[1]>>1);
-		filterMaxSlider.setMin(minMax[1]>>2);
+		filterMinSlider.setMax(minMax[1]/2);
+		filterMinSlider.setValue(minMax[0]);
+		filterMinSlider.setBlockIncrement((minMax[1]-minMax[0])/40);
+		filterMaxSlider.setMin(minMax[1]/2);
 		filterMaxSlider.setMax(minMax[1]);
+		filterMaxSlider.setBlockIncrement((minMax[1]-minMax[0])/40);
 		filterMaxSlider.setValue(minMax[1]);
+		//setup average
+		filterAvgSlider.setMax(imgProc.getClusterCount()/2);
+		filterAvgSlider.setValue(0);
 		filtersUpdated = true;
 	}
 
