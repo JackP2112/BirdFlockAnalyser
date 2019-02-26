@@ -12,6 +12,8 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
+import javafx.scene.paint.Color;
+import javafx.scene.shape.Line;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Text;
 import javafx.stage.FileChooser;
@@ -96,17 +98,23 @@ public class ViewerController {
 		if(e.getSource()==posteriseSlider) posteriseButton.setSelected(true);
 		if(posteriseButton.isSelected()) {
 			imageView.setImage(imgProc.posterise((int)posteriseSlider.getValue()));
-			imgProc.findClusters(); //throwaway to update filters
-			updateFilters();
-			if(filterMinMax.isSelected() || filterAvgSize.isSelected()) filterSize();
-			scanImage();
+			if(scanImageButton.isSelected()) { //TODO: might break filters
+				imgProc.findClusters(); //throwaway to update filters
+				updateFilters();
+				if (filterMinMax.isSelected() || filterAvgSize.isSelected()) filterSize();
+				scanImage();
+			}
 		}
 		else imageView.setImage(image);
 	}
 
 	@FXML
 	private void findFormation(){
-		imgProc.findFormation();
+		int[][] endpoints = imgProc.findFormation();
+		//imageLayers.getChildren().add(new Line(endpoints[0][0], endpoints[0][1], endpoints[endpoints.length-1][0], endpoints[endpoints.length-1][1]));
+		Line line = new Line(0,0,endpoints[0][0],endpoints[0][1]);
+		line.setStroke(Color.RED);
+		imageLayers.getChildren().add(line);
 	}
 
 	@FXML
