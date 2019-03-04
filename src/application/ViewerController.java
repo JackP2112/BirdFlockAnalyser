@@ -111,10 +111,10 @@ public class ViewerController {
 	@FXML
 	private void findFormation(){
 		int[][] endpoints = imgProc.findFormation();
-		//imageLayers.getChildren().add(new Line(endpoints[0][0], endpoints[0][1], endpoints[endpoints.length-1][0], endpoints[endpoints.length-1][1]));
-		Line line = new Line(0,0,endpoints[0][0],endpoints[0][1]);
+		Line line = new Line(endpoints[0][0],endpoints[0][1],endpoints[endpoints.length-1][0],endpoints[endpoints.length-1][1]);
 		line.setStroke(Color.RED);
 		imageLayers.getChildren().add(line);
+		System.out.println("finished");
 	}
 
 	@FXML
