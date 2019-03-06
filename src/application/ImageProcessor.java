@@ -143,43 +143,108 @@ public class ImageProcessor {
 		int avgWidth = totalWidth/clusters.length;
 		//find longest line
 		int[][] mostClustersOnLine = new int[clusters.length][2];
-		int mostClusters = 0;
+		int mostNumOnLine = 0;
+		int[][] mostClustersInDelta = new int[clusters.length][2];
+		int mostNumInDelta = 0;
 		for(int i=0;i<clusters.length-2;i++){
-			for(int j=i+2;j<clusters.length;j++){
-				int[][] clustersOnLine = new int[clusters.length][2];
-				int numClusters = 1;
-				//find endpoints
-				int[] endpoint1 = getClusterCenterpoint(clusters[i]);
-				int[] endpoint2 = getClusterCenterpoint(clusters[j]);
-				//find line between endpoints
-				int x1 = endpoint1[0];
-				int y1 = endpoint1[1];
-				int x2 = endpoint2[0];
-				int y2 = endpoint2[1];
-				float m = (float)(y2-y1)/(x2-x1);
-				int c = (int) (y1 - (m*x1));
-				clustersOnLine[0] = endpoint1;
-				for(int k=i+1;k<j;k++){ //for each cluster between endpoints
-					int[] centerpoint = getClusterCenterpoint(clusters[k]);
-					int yCalc = (int) (m*centerpoint[0]+c);
-					if(centerpoint[1] > yCalc-1.5*avgHeight && centerpoint[1] < yCalc+1.5*avgHeight) {
-						clustersOnLine[numClusters++] = centerpoint;
-					} else {
-						int xCalc = (int) ((centerpoint[1]-c)/m);
-						if(centerpoint[0] > xCalc-1.5*avgWidth && centerpoint[0] < xCalc+1.5*avgWidth) clustersOnLine[numClusters++] = centerpoint;
-					}
-				}
-				clustersOnLine[numClusters++] = endpoint2;
-				if(numClusters>mostClusters){
+			for(int j = (int)(i+0.4*clusters.length); j<clusters.length; j++){
+				int[][] clustersOnLine = getClustersOnLine(i, j, 1.5*avgWidth, 1.5*avgHeight);
+				int numLineClusters = 0;
+				while(clustersOnLine[numLineClusters][0]!=0) numLineClusters++;
+				if(numLineClusters>mostNumOnLine){
 					mostClustersOnLine = clustersOnLine;
-					mostClusters = numClusters;
+					mostNumOnLine = numLineClusters;
 				}
 			}
 		}
-		int[][] trimmedClusters = new int[mostClusters][2];
-		for(int i=0;i<mostClusters;i++) trimmedClusters[i] = mostClustersOnLine[i];
+		int[][] trimmedClusters = new int[mostNumOnLine][2];
+		for(int i=0;i<mostNumOnLine;i++) trimmedClusters[i] = mostClustersOnLine[i];
 		return trimmedClusters;
 	}
+
+
+	private int[][] getClustersOnLine(int startCluster, int endCluster, double xMargin, double yMargin){
+		int[][] clustersOnLine = new int[clusters.length][2];
+		int numLineClusters = 1;
+		//find endpoints
+		int[] endpoint1 = getClusterCenterpoint(clusters[startCluster]);
+		int[] endpoint2 = getClusterCenterpoint(clusters[endCluster]);
+		//find line between endpoints
+		int x1 = endpoint1[0];
+		int y1 = endpoint1[1];
+		int x2 = endpoint2[0];
+		int y2 = endpoint2[1];
+		float m = (float)(y2-y1)/(x2-x1);
+		int c = (int) (y1 - (m*x1));
+		clustersOnLine[0] = endpoint1;
+		for(int k=startCluster+1;k<endCluster;k++){ //for each cluster between endpoints
+			int[] centerpoint = getClusterCenterpoint(clusters[k]);
+			int yCalc = (int) (m*centerpoint[0]+c);
+			if(centerpoint[1] > yCalc-yMargin && centerpoint[1] < yCalc+yMargin) {
+				clustersOnLine[numLineClusters++] = centerpoint;
+			} else {
+				int xCalc = (int) ((centerpoint[1]-c)/m);
+				if(centerpoint[0] > xCalc-xMargin && centerpoint[0] < xCalc+xMargin) clustersOnLine[numLineClusters++] = centerpoint;
+			}
+		}
+		clustersOnLine[numLineClusters] = endpoint2;
+		return clustersOnLine;
+	}
+
+
+	/*if(clusters.length==1) return null;
+		if(clusters.length==2){
+		//return coords of two clusters
+	}
+	//find average bird size
+	int totalHeight = 0;
+	int totalWidth = 0;
+		for(int cluster:clusters){
+		int[] edges = getClusterEdges(cluster);
+		totalHeight += edges[2]-edges[0];
+		totalWidth += edges[1]-edges[3];
+	}
+	int avgHeight = totalHeight/clusters.length;
+	int avgWidth = totalWidth/clusters.length;
+	//find longest line
+	int[][] mostClustersOnLine = new int[clusters.length][2];
+	int mostNumOnLine = 0;
+		for(int i=0;i<clusters.length-2;i++){
+		for(int j = (int)(i+0.7*clusters.length); j<clusters.length; j++){
+			int[][] clustersOnLine = new int[clusters.length][2];
+			int numClusters = 1;
+			//find endpoints
+			int[] endpoint1 = getClusterCenterpoint(clusters[i]);
+			int[] endpoint2 = getClusterCenterpoint(clusters[j]);
+			//find line between endpoints
+			int x1 = endpoint1[0];
+			int y1 = endpoint1[1];
+			int x2 = endpoint2[0];
+			int y2 = endpoint2[1];
+			float m = (float)(y2-y1)/(x2-x1);
+			int c = (int) (y1 - (m*x1));
+			clustersOnLine[0] = endpoint1;
+			for(int k=i+1;k<j;k++){ //for each cluster between endpoints
+				int[] centerpoint = getClusterCenterpoint(clusters[k]);
+				int yCalc = (int) (m*centerpoint[0]+c);
+				if(centerpoint[1] > yCalc-1.5*avgHeight && centerpoint[1] < yCalc+1.5*avgHeight) {
+					clustersOnLine[numClusters++] = centerpoint;
+				} else {
+					int xCalc = (int) ((centerpoint[1]-c)/m);
+					if(centerpoint[0] > xCalc-1.5*avgWidth && centerpoint[0] < xCalc+1.5*avgWidth) clustersOnLine[numClusters++] = centerpoint;
+				}
+			}
+			clustersOnLine[numClusters++] = endpoint2;
+			//line has been found
+			if(numClusters>mostNumOnLine){
+				mostClustersOnLine = clustersOnLine;
+				mostNumOnLine = numClusters;
+			}
+		}
+	}
+	int[][] trimmedClusters = new int[mostNumOnLine][2];
+		for(int i=0;i<mostNumOnLine;i++) trimmedClusters[i] = mostClustersOnLine[i];
+		return trimmedClusters;*/
 
 	private int[] getClusterCenterpoint(int root){
 		int[] coords = new int[2];
