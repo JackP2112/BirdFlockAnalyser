@@ -14,7 +14,7 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<VBox alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="800.0" prefWidth="1100.0" xmlns="http://javafx.com/javafx/10.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="application.ViewerController">
+<VBox alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="800.0" prefWidth="1100.0" xmlns="http://javafx.com/javafx/8.0.172-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="application.ViewerController">
    <children>
       <HBox alignment="CENTER">
          <children>
@@ -27,7 +27,7 @@
       </HBox>
       <Pane>
          <children>
-            <Label fx:id="countLabel" alignment="CENTER" prefHeight="80.0" prefWidth="119.0">
+            <Label fx:id="countLabel" alignment="CENTER" prefHeight="80.0" prefWidth="180.0">
                <font>
                   <Font size="20.0" />
                </font>
@@ -43,7 +43,7 @@
                         </ImageView>
                      </graphic>
                   </Button>
-                  <ToggleButton fx:id="scanImageButton" layoutX="575.0" layoutY="23.0" mnemonicParsing="false" onAction="#scanImage" prefHeight="55.0" prefWidth="55.0">
+                  <ToggleButton fx:id="scanImageButton" disable="true" layoutX="575.0" layoutY="23.0" mnemonicParsing="false" onAction="#scanImage" prefHeight="55.0" prefWidth="55.0">
                      <graphic>
                         <ImageView fitHeight="39.0" fitWidth="39.0" pickOnBounds="true" preserveRatio="true">
                            <image>
@@ -52,7 +52,7 @@
                         </ImageView>
                      </graphic>
                   </ToggleButton>
-                  <ToggleButton fx:id="posteriseButton" layoutX="533.0" layoutY="23.0" mnemonicParsing="false" onAction="#posterise" prefHeight="55.0" prefWidth="55.0">
+                  <ToggleButton fx:id="posteriseButton" disable="true" layoutX="533.0" layoutY="23.0" mnemonicParsing="false" onAction="#posterise" prefHeight="55.0" prefWidth="55.0">
                      <graphic>
                         <ImageView fitHeight="39.0" fitWidth="39.0" pickOnBounds="true" preserveRatio="true">
                            <image>
@@ -61,7 +61,7 @@
                         </ImageView>
                      </graphic>
                   </ToggleButton>
-                  <Button layoutX="618.0" layoutY="23.0" mnemonicParsing="false" onAction="#changePanel" prefHeight="55.0" prefWidth="55.0">
+                  <Button fx:id="settingsButton" disable="true" layoutX="618.0" layoutY="23.0" mnemonicParsing="false" onAction="#changePanel" prefHeight="55.0" prefWidth="55.0">
                      <graphic>
                         <ImageView fitHeight="39.0" fitWidth="39.0" pickOnBounds="true" preserveRatio="true">
                            <image>

@@ -4,10 +4,7 @@ import javafx.collections.ObservableList;
 import javafx.event.Event;
 import javafx.fxml.FXML;
 import javafx.scene.Node;
-import javafx.scene.control.Label;
-import javafx.scene.control.RadioButton;
-import javafx.scene.control.Slider;
-import javafx.scene.control.Toggle;
+import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
@@ -27,7 +24,8 @@ public class ViewerController {
 	@FXML private ImageView imageView;
 	@FXML private  Pane imageLayers;
 	@FXML private Label countLabel;
-	@FXML private Toggle scanImageButton, posteriseButton;
+	@FXML private ToggleButton scanImageButton, posteriseButton;
+	@FXML private Button settingsButton;
 	@FXML private HBox controlPanel, settingsPanel;
 	@FXML private Slider posteriseSlider, filterMinSlider, filterMaxSlider, filterAvgSlider;
 	@FXML private RadioButton filterMinMax, filterAvgSize;
@@ -53,13 +51,14 @@ public class ViewerController {
 		try {
 			FileInputStream fis = new FileInputStream(path);
 			image = new Image(fis, imageView.getFitWidth(), imageView.getFitHeight(), true, false);
-//            image = new Image(fis);
 			fis.close();
 			imgProc = new ImageProcessor(image);
 			imageView.setImage(image);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+		scanImageButton.setDisable(false);
+		posteriseButton.setDisable(false);
 		filtersUpdated = false;
 	}
 
@@ -75,6 +74,7 @@ public class ViewerController {
 				imageLayers.getChildren().add(new Text(rect.getX()+rect.getWidth(), rect.getY(), Integer.toString(clusterNo++)));
 			}
 			countLabel.setText(imgProc.getClusterCount()+" Birds");
+			settingsButton.setDisable(false);
 		}
 	}
 
@@ -110,11 +110,29 @@ public class ViewerController {
 
 	@FXML
 	private void findFormation(){
-		int[][] endpoints = imgProc.findFormation();
-		Line line = new Line(endpoints[0][0],endpoints[0][1],endpoints[endpoints.length-1][0],endpoints[endpoints.length-1][1]);
-		line.setStroke(Color.RED);
-		imageLayers.getChildren().add(line);
-		System.out.println("finished");
+		int[][][] lines = imgProc.findFormation();
+		try{
+			int[][] firstLinePoints = lines[0];
+			int[][] secondLinePoints = lines[1];
+			Line firstLine = new Line(firstLinePoints[0][0],firstLinePoints[0][1],firstLinePoints[firstLinePoints.length-1][0],firstLinePoints[firstLinePoints.length-1][1]);
+			firstLine.setStroke(Color.RED);
+			try {
+				Line secondLine = new Line(secondLinePoints[0][0], secondLinePoints[0][1], secondLinePoints[secondLinePoints.length - 1][0], secondLinePoints[secondLinePoints.length - 1][1]);
+				secondLine.setStroke(Color.RED);
+				imageLayers.getChildren().addAll(firstLine, secondLine);
+				countLabel.setText(countLabel.getText()+", Delta: "+(firstLinePoints.length+secondLinePoints.length-1));
+				System.out.println("delta\n"+(firstLinePoints.length+secondLinePoints.length-1));
+			}
+			catch (NullPointerException e){
+				imageLayers.getChildren().add(firstLine);
+				countLabel.setText(countLabel.getText()+", Linear: "+firstLinePoints.length);
+				System.out.println("linear\n"+firstLinePoints.length);
+			}
+		}
+		catch (NullPointerException e){
+			countLabel.setText(countLabel.getText()+", Swarm: NA");
+			System.out.println("swarm");
+		}
 	}
 
 	@FXML
